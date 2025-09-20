@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🏋️ Fitness Tracker</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body {
+      font-family: 'Roboto', Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: linear-gradient(135deg, #e0f7fa, #b2ebf2);
+      color: #333;
+      min-height: 100vh;
+    }
+    .dark {
+      background: linear-gradient(135deg, #1e1e1e, #37474f);
+      color: #eee;
+    }
+    h1 {
+      text-align: center;
+      color: #00796b;
+      font-size: 2.5em;
+      margin-bottom: 20px;
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+    }
+    .dark h1 { color: #4db6ac; }
+    .container {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      padding: 20px;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+    .dark .container { background: #2d2d2d; }
+    input {
+      width: 100%;
+      max-width: 400px;
+      padding: 12px;
+      margin: 10px auto;
+      font-size: 16px;
+      border: 2px solid #00796b;
+      border-radius: 5px;
+      box-sizing: border-box;
+    }
+    .dark input { border-color: #4db6ac; }
+    button {
+      width: 100%;
+      max-width: 400px;
+      padding: 12px;
+      margin: 10px auto;
+      font-size: 16px;
+      cursor: pointer;
+      background: #ff5722;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      transition: background 0.3s, transform 0.1s;
+    }
+    button:hover {
+      background: #e64a19;
+      transform: scale(1.02);
+    }
+    .dark button { background: #ff7043; }
+    .dark button:hover { background: #f4511e; }
+    .exercise {
+      border: 1px solid #b0bec5;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 8px;
+      background: #f5f5f5;
+    }
+    .dark .exercise { background: #424242; border-color: #616161; }
+    .exercise input {
+      width: calc(80% - 10px);
+      display: inline-block;
+      margin-right: 5px;
+    }
+    .delete {
+      color: #d32f2f;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 18px;
+    }
+    .hidden { display: none; }
+    .workout-list button {
+      text-align: left;
+      padding: 15px;
+      margin: 5px 0;
+      border-radius: 5px;
+      background: #4db6ac;
+      color: white;
+      width: 100%;
+      max-width: 400px;
+    }
+    .dark .workout-list button { background: #26a69a; }
+    .workout-list button:hover { background: #0097a7; }
+    .dark .workout-list button:hover { background: #00838f; }
+    #notification {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      padding: 15px;
+      background: #00796b;
+      color: white;
+      border-radius: 5px;
+      max-width: 300px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+      animation: fadeInOut 3s ease-in-out;
+    }
+    @keyframes fadeInOut {
+      0% { opacity: 0; transform: translateY(-10px); }
+      10% { opacity: 1; transform: translateY(0); }
+      90% { opacity: 1; transform: translateY(0); }
+      100% { opacity: 0; transform: translateY(-10px); }
+    }
+    .no-workouts {
+      text-align: center;
+      color: #888;
+      font-style: italic;
+    }
+    p { text-align: center; font-size: 1.2em; }
+  </style>
+</head>
+<body>
+
+  <h1>🏋️ Fitness Tracker</h1>
+
+  <!-- Notification -->
+  <div id="notification" class="hidden"></div>
+
+  <!-- Login/Register -->
+  <div id="loginScreen" class="container">
+    <input type="text" id="username" placeholder="Username">
+    <input type="password" id="password" placeholder="Password">
+    <button onclick="login()"><i class="fas fa-sign-in-alt"></i> Login</button>
+    <button onclick="register()"><i class="fas fa-user-plus"></i> Register</button>
+    <button onclick="toggleDarkMode()"><i class="fas fa-moon"></i> Toggle Dark Mode</button>
+  </div>
+
+  <!-- Main Menu -->
+  <div id="mainMenuScreen" class="container hidden">
+    <p id="welcomeText"></p>
+    <p id="statsText"></p>
+    <button onclick="showAddWorkout()"><i class="fas fa-plus-circle"></i> Add Workout</button>
+    <button onclick="showWorkoutList()"><i class="fas fa-list"></i> Workout List</button>
+    <button onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+  </div>
+
+  <!-- Add Workout -->
+  <div id="addWorkoutScreen" class="container hidden">
+    <input type="text" id="workoutName" placeholder="Workout Name">
+    <div id="exercisesContainer"></div>
+    <button onclick="addExercise()"><i class="fas fa-plus"></i> Add Exercise</button>
+    <button onclick="saveWorkout()"><i class="fas fa-save"></i> Save Workout</button>
+    <button onclick="showMainMenu()"><i class="fas fa-arrow-left"></i> Back</button>
+  </div>
+
+  <!-- Workout List -->
+  <div id="workoutListScreen" class="container hidden">
+    <div id="workoutListContainer" class="workout-list"></div>
+    <button onclick="showMainMenu()"><i class="fas fa-arrow-left"></i> Back</button>
+  </div>
+
+<script>
+let users = {};
+let currentUser = null;
+let exercises = [];
+let currentWorkout = null;
+let timer = null;
+
+// Load users from localStorage
+if (localStorage.getItem('users')) {
+  try {
+    users = JSON.parse(localStorage.getItem('users'));
+  } catch (e) {
+    console.error('Error parsing localStorage:', e);
+    showNotification('Failed to load user data.');
+  }
+}
+
+function showNotification(message) {
+  const notif = document.getElementById('notification');
+  notif.innerText = message;
+  notif.classList.remove('hidden');
+  setTimeout(() => notif.classList.add('hidden'), 3000);
+}
+
+function toggleDarkMode() {
+  document.body.classList.toggle('dark');
+}
+
+function login() {
+  const u = document.getElementById('username').value.trim();
+  const p = document.getElementById('password').value;
+  if (!u || !p) return showNotification('Enter username and password');
+  if (users[u] && users[u].password === p) {
+    currentUser = u;
+    showMainMenu();
+  } else {
+    showNotification('Invalid login!');
+  }
+}
+
+function register() {
+  const u = document.getElementById('username').value.trim();
+  const p = document.getElementById('password').value;
+  if (!u || !p) return showNotification('Enter username and password');
+  if (users[u]) return showNotification('User exists!');
+  users[u] = { password: p, workouts: [], points: 0, streak: 0, lastPointsDate: null };
+  localStorage.setItem('users', JSON.stringify(users));
+  showNotification('Registered! Login now.');
+}
+
+function logout() {
+  if (timer) clearTimeout(timer);
+  currentUser = null;
+  showScreen('loginScreen');
+}
+
+function showScreen(id) {
+  document.querySelectorAll('body > div').forEach(d => d.classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+}
+
+function showMainMenu() {
+  if (!currentUser) return showScreen('loginScreen');
+  document.getElementById('welcomeText').innerText = `Welcome, ${currentUser} 🏋️`;
+  const user = users[currentUser];
+  document.getElementById('statsText').innerText = `Streak: ${user.streak} 🔥 | Points: ${user.points} ⭐`;
+  showScreen('mainMenuScreen');
+}
+
+function showAddWorkout() {
+  exercises = [];
+  document.getElementById('workoutName').value = '';
+  document.getElementById('exercisesContainer').innerHTML = '';
+  showScreen('addWorkoutScreen');
+}
+
+function addExercise() {
+  const container = document.getElementById('exercisesContainer');
+  const div = document.createElement('div');
+  div.className = 'exercise';
+  div.innerHTML = `
+    <input placeholder="Exercise (e.g., Squats)">
+    <input placeholder="Sets" type="number" min="1">
+    <input placeholder="Reps" type="number" min="1">
+    <input placeholder="Duration (sec)" type="number" min="1">
+    <span class="delete" onclick="this.parentNode.remove()">❌</span>
+  `;
+  container.appendChild(div);
+}
+
+function saveWorkout() {
+  const name = document.getElementById('workoutName').value.trim();
+  if (!name) return showNotification('Enter workout name!');
+  const exEls = document.querySelectorAll('#exercisesContainer .exercise');
+  const exArr = [];
+  exEls.forEach(e => {
+    const [exercise, sets, reps, duration] = e.querySelectorAll('input');
+    if (exercise.value && sets.value && reps.value && duration.value) {
+      const s = parseInt(sets.value);
+      const r = parseInt(reps.value);
+      const d = parseInt(duration.value);
+      if (s > 0 && r > 0 && d > 0) {
+        exArr.push({
+          exercise: exercise.value,
+          sets: s,
+          reps: r,
+          duration: d
+        });
+      }
+    }
+  });
+  if (exArr.length === 0) return showNotification('Add at least one valid exercise!');
+  const timestamp = Date.now();
+  users[currentUser].workouts.push({
+    name,
+    exercises: exArr,
+    timestamp
+  });
+  localStorage.setItem('users', JSON.stringify(users));
+  showNotification(`Workout "${name}" saved on ${new Date(timestamp).toLocaleString()}`);
+  showMainMenu();
+}
+
+function showWorkoutList() {
+  const container = document.getElementById('workoutListContainer');
+  container.innerHTML = '';
+  const workouts = users[currentUser]?.workouts || [];
+  if (workouts.length === 0) {
+    const p = document.createElement('p');
+    p.className = 'no-workouts';
+    p.innerText = 'No workouts saved yet. Add one to get started!';
+    container.appendChild(p);
+  } else {
+    workouts.forEach((w, i) => {
+      const btn = document.createElement('button');
+      const formattedDate = w.timestamp ? new Date(w.timestamp).toLocaleString() : 'No date';
+      btn.innerText = `${w.name} (Saved: ${formattedDate})`;
+      btn.onclick = () => startWorkout(w);
+      container.appendChild(btn);
+    });
+  }
+  showScreen('workoutListScreen');
+}
+
+function startWorkout(workout) {
+  if (timer) clearTimeout(timer);
+  currentWorkout = workout;
+  let index = 0;
+  showNotification(`Starting workout: ${workout.name} 💪`);
+  function nextExercise() {
+    if (index >= workout.exercises.length) {
+      const today = new Date().toLocaleDateString();
+      const user = users[currentUser];
+      if (user.lastPointsDate !== today) {
+        user.points += 10;
+        user.streak += 1;
+        user.lastPointsDate = today;
+        localStorage.setItem('users', JSON.stringify(users));
+        showNotification('Workout Complete! +10 points & +1 streak! 🎉');
+      } else {
+        showNotification('Workout Complete! Already earned points today.');
+      }
+      showMainMenu();
+      return;
+    }
+    const ex = workout.exercises[index];
+    showNotification(`Exercise: ${ex.exercise}, Sets: ${ex.sets}, Reps: ${ex.reps}, Duration: ${ex.duration}s`);
+    timer = setTimeout(() => { index++; nextExercise(); }, ex.duration * 1000);
+  }
+  nextExercise();
+}
+</script>
+</body>
+</html>
